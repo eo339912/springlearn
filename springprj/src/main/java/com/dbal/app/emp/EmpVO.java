@@ -25,7 +25,7 @@ public class EmpVO {
 	@JsonProperty(value = "id") 
 	String firstName;
 	String lastName;
-	@JsonIgnore String email;
+	String email;
 	@JsonFormat(pattern = "yyyy-MM-dd")
 	String hireDate;
 	String employeeId;

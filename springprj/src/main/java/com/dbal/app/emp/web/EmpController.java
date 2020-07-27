@@ -2,10 +2,18 @@ package com.dbal.app.emp.web;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -20,10 +28,20 @@ import com.dbal.app.common.FileRenamePolicy;
 import com.dbal.app.emp.EmpVO;
 import com.dbal.app.emp.service.EmpService;
 
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+
 @Controller //bean등록, dispatcher 서블릿이 인식할 수 있는 컨트롤러로 변환 //@component 상속
 public class EmpController {
 	@Autowired
 	EmpService empService;
+	
+	@Autowired
+	@Qualifier("dataSource")
+	DataSource datasource;
 	
 //	@RequestMapping("/empList.do")
 //	public String empList(Model model) {
@@ -79,11 +97,11 @@ public class EmpController {
 	
 	
 	//단건조회
-	@RequestMapping("getEmp/{employeeId}/{firstName}") //getEmp?employeeId=aaa
-	public String getEmp(@PathVariable Integer employeeId, @PathVariable String firstName) {
-		System.out.println(employeeId);
-		System.out.println(firstName);
-		return "home";
+	@RequestMapping("getEmp/{employeeId}") //getEmp?employeeId=aaa
+	public String getEmp(@PathVariable String employeeId, Model model, EmpVO empVO) {
+		empVO.setEmployeeId(employeeId);
+		model.addAttribute("emp", empService.getEmp(empVO));
+		return "empty/emp/getEmp";
 	}
 	
 	//목록조회
@@ -114,5 +132,34 @@ public class EmpController {
 	public @ResponseBody List<Map<String, Object>> chartDeptEmpCnt(){
 		return empService.getDeptEmpCnt();
 	}
+	
+	@RequestMapping("report.do")
+	public void report(HttpServletRequest request, HttpServletResponse response) throws Exception {
+	Connection conn = datasource.getConnection();
+	//InputStream jasperStream = getClass().getResourceAsStream("/reports/emp_list.jasper");
+	//JasperReport jasperReport = (JasperReport) JRLoader.loadObject(jasperStream);
+	InputStream stream = getClass().getResourceAsStream("/reports/emp_list.jrxml");
+	JasperReport jasperReport = JasperCompileManager.compileReport(stream);
+	
+	HashMap<String,Object> map = new HashMap<String,Object>();
+	map.put("p_departmentId", request.getParameter("dept"));
+		
+	JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, map, conn);
+	JasperExportManager.exportReportToPdfStream(jasperPrint, response.getOutputStream());
+	}
+	
+	@RequestMapping("report1.do")
+	public String report3(HttpServletRequest request, HttpServletResponse response, Model model) throws
+	Exception {
+	model.addAttribute("filename", "/reports/emp_list.jasper");
+	return "pdfView";
+	}
+	
+	@RequestMapping("getEmpAjax")
+	@ResponseBody
+	public EmpVO getEmpAjax(EmpVO empVO) {
+		return empService.getEmp(empVO);
+	}
+
 	
 }

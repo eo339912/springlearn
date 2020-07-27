@@ -217,6 +217,18 @@
 		    <scope>provided</scope>
 		</dependency>
 		
+		
+		<dependency>
+			<groupId>net.sf.jasperreports</groupId>
+			<artifactId>jasperreports</artifactId>
+			<version>6.13.0</version>
+		</dependency>
+		<!-- 확장폰트 쓰는법-->
+		<dependency>
+			<groupId>net.sf.jasperreports</groupId>
+			<artifactId>jasperreports-fonts</artifactId>
+			<version>6.13.0</version>
+		</dependency>
 
 	</dependencies>
 	<build>
